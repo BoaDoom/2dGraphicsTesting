@@ -9,37 +9,64 @@ import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.geom.Ellipse2D;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.Timer;
+
+
+
 
 
 class Surface extends JPanel implements ActionListener{
 	private final static int TABLE_WIDTH = CircleBoard.TABLE_WIDTH;
 	private final static int TABLE_HEIGHT = CircleBoard.TABLE_HEIGHT;
 	
-	Ellipse2D.Double circleLayerGreen;
-	Ellipse2D.Double centerCircleDarkGreen;
-	Ellipse2D.Double centerMovingTop;
+//	Ellipse2D.Double circleLayerGreen;
+	Ellipse2D.Double ccLayer1;
+	Ellipse2D.Double ccLayer2;
 	
-    private Timer timer;
-    private int count;
-    private final int INITIAL_DELAY = 200;
-    private final int DELAY = 80;
+//	private Layer1Movement rectAnimator;
+//    private Timer timer;
+//    private int count;
+//    private final int INITIAL_DELAY = 200;
+//    private final int DELAY = 80;
     
-    public int circleHeight = (TABLE_HEIGHT/4);
+    int circleYcord1 = (TABLE_HEIGHT/4);
+    int circleYcord2 = 30;
+    
+    public int circleValAdd = 0;
     
     public Surface() {
-        initTimer();
+        initSurface();
     }
-    private void initTimer() {
+    private void initSurface() {
+	   	addMouseListener(new HitTestAdapter());
         
-        timer = new Timer(DELAY, this);
-        timer.setInitialDelay(INITIAL_DELAY);
-        timer.start();        
     }
-	
+    class HitTestAdapter extends MouseAdapter implements Runnable {
+    	private Thread rectAnimator;
+    	private Thread Layer2Movement;
+    	@Override
+    	public void mousePressed(MouseEvent e) {
+    		int x = e.getX();
+    		int y = e.getY();
+    		if (ccLayer1.contains(x, y)) {
+    			rectAnimator = new Thread(new Layer1Movement());
+    		}
+    		if (ccLayer2.contains(x, y)) {
+    			Layer2Movement = new Thread(new Layer2Movement());
+    		}
+    	}
+    	public void run() {
+    	}
+    }
+    
     private void doDrawing(Graphics g) {
         Graphics2D g2d = (Graphics2D) g.create();
 
@@ -49,17 +76,18 @@ class Surface extends JPanel implements ActionListener{
         g2d.setRenderingHint(RenderingHints.KEY_RENDERING,
                 RenderingHints.VALUE_RENDER_QUALITY);
         g2d.setPaint(new Color(39,134,39));
-        circleLayerGreen = new Ellipse2D.Double(15, 15, 970, 770);
-        g2d.fill(circleLayerGreen);
+        ccLayer1 = new Ellipse2D.Double(15, 15, 970, 770);
+        g2d.fill(ccLayer1);
         g2d.setPaint(new Color(20,80,20));
-        centerCircleDarkGreen = new Ellipse2D.Double(((TABLE_WIDTH/2)-((TABLE_WIDTH/2.5)/2)), circleHeight, TABLE_WIDTH/2.5, TABLE_HEIGHT/3);
-        g2d.fill(centerCircleDarkGreen);
-        g2d.setPaint(new Color(30,110,30));
-        centerMovingTop = new Ellipse2D.Double(((TABLE_WIDTH/2)-((TABLE_WIDTH/2.5)/2)), (TABLE_HEIGHT/4), TABLE_WIDTH/2.5, TABLE_HEIGHT/3);
-        g2d.fill(centerMovingTop);
-        
-        g2d.translate(0,circleHeight);
-        circleHeight++;
+        ccLayer2 = new Ellipse2D.Double(((TABLE_WIDTH/2)-((TABLE_WIDTH/2.5)/2)), circleYcord1 , TABLE_WIDTH/2.5, TABLE_HEIGHT/3);
+        g2d.fill(ccLayer2);
+//        g2d.setPaint(new Color(30,110,30));
+//        centerMovingTop = new Ellipse2D.Double(((TABLE_WIDTH/2)-((TABLE_WIDTH/2.5)/2)), (TABLE_HEIGHT/4), TABLE_WIDTH/2.5, TABLE_HEIGHT/3);
+//        g2d.fill(centerMovingTop);
+//        rectAnimator = new Layer1Movement();
+        g2d.translate(0,circleValAdd);
+
+
         g2d.dispose();
    } 
 
@@ -73,7 +101,73 @@ class Surface extends JPanel implements ActionListener{
     public void actionPerformed(ActionEvent e) {
 
         repaint();
-        count++;
+//        count++;
+    }
+    
+    class Layer1Movement implements Runnable {
+        private Thread runner;
+        private int count = 0;
+        public Layer1Movement() {
+        	initThread();
+        }
+        private void initThread() {
+            runner = new Thread(this);
+            runner.start();
+        }
+        @Override
+        public void run() {
+            while (count < 60) {
+                repaint();
+                count++;
+                if (count <= 10){
+                	circleYcord1 += 5;
+                }
+                else if (count > 20){
+                }
+                else{
+                	circleYcord1 -= 5;
+                }
+
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException ex) {
+                     Logger.getLogger(Surface.class.getName()).log(Level.SEVERE, 
+                             null, ex);
+                }
+            }
+        }
+    }
+    class Layer2Movement implements Runnable {
+        private Thread runner;
+        private int count = 0;
+        public Layer2Movement() {
+        	initThread();
+        }
+        private void initThread() {
+            runner = new Thread(this);
+            runner.start();
+        }
+        @Override
+        public void run() {
+            while (count < 60) {
+                repaint();
+                count++;
+                if (count <= 10){
+                	circleYcord2 += 5;
+                }
+                else if (count > 20){
+                }
+                else{
+                	circleYcord2 -= 5;
+                }
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException ex) {
+                     Logger.getLogger(Surface.class.getName()).log(Level.SEVERE, 
+                             null, ex);
+                }
+            }
+        }
     }
 }
 
