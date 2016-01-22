@@ -11,7 +11,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
+import java.awt.geom.Rectangle2D;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,11 +30,31 @@ class Surface extends JPanel implements ActionListener{
 	private final static int TABLE_WIDTH = CircleBoard.TABLE_WIDTH;
 	private final static int TABLE_HEIGHT = CircleBoard.TABLE_HEIGHT;
 	
-//	Ellipse2D.Double circleLayerGreen;
-	Ellipse2D.Double ccLayer1;
-	Ellipse2D.Double ccLayer2;
+	final static int OUTERCIRCLEYCORD = 45;
+	final static int OUTERCIRCLEXCORD = 45;
+	final static int OUTERCIRCLEXDIM = 910;
+	final static int OUTERCIRCLEYDIM = 710;
 	
-//	private Layer1Movement rectAnimator;
+	int outerCircleYmovement = 0;
+	int xStretch = 0;
+//	Double scaleMovement = 0.0;
+	
+//	Ellipse2D.Double circleLayerGreen;
+	Area outerCircleTable;
+	Area outerCircleBackground;
+	Area tableRim;
+	Area innerStationaryCircleTop;
+	Area innerStationaryCircleShade;
+	Area innerStationaryCircleShadeHole;
+	
+	
+	Area innerStationaryCircleTopHole;
+	Area innerRightSideSquare;
+	Area innerLeftSideSquare;
+	Area rightSideCircleShade;
+	Area innerLeftSideSquareFiller;
+	
+//	private Layer1Movement outerCircleAnimator;
 //    private Timer timer;
 //    private int count;
 //    private final int INITIAL_DELAY = 200;
@@ -39,6 +62,8 @@ class Surface extends JPanel implements ActionListener{
     
     int circleYcord1 = (TABLE_HEIGHT/4);
     int circleYcord2 = 30;
+    
+    int tableEdgeYcord = 30;
     
     public int circleValAdd = 0;
     
@@ -50,18 +75,18 @@ class Surface extends JPanel implements ActionListener{
         
     }
     class HitTestAdapter extends MouseAdapter implements Runnable {
-    	private Thread rectAnimator;
-    	private Thread Layer2Movement;
+//    	private Thread outerCircleAnimator;
+//    	private Thread Layer2Movement;
     	@Override
     	public void mousePressed(MouseEvent e) {
     		int x = e.getX();
     		int y = e.getY();
-    		if (ccLayer1.contains(x, y)) {
-    			rectAnimator = new Thread(new Layer1Movement());
+    		if (innerStationaryCircleTop.contains(x, y)) {
+    			/*outerCircleAnimator =*/ new Thread(new Layer1Movement());
     		}
-    		if (ccLayer2.contains(x, y)) {
-    			Layer2Movement = new Thread(new Layer2Movement());
-    		}
+//    		if (innerStationaryCircleTop.contains(x, y)) {
+//    			/*Layer2Movement =*/ new Thread(new Layer2Movement());
+//    		}
     	}
     	public void run() {
     	}
@@ -70,22 +95,68 @@ class Surface extends JPanel implements ActionListener{
     private void doDrawing(Graphics g) {
         Graphics2D g2d = (Graphics2D) g.create();
 
-        g2d.setPaint(new Color(39,134,39));
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setRenderingHint(RenderingHints.KEY_RENDERING,
                 RenderingHints.VALUE_RENDER_QUALITY);
-        g2d.setPaint(new Color(39,134,39));
-        ccLayer1 = new Ellipse2D.Double(15, 15, 970, 770);
-        g2d.fill(ccLayer1);
-        g2d.setPaint(new Color(20,80,20));
-        ccLayer2 = new Ellipse2D.Double(((TABLE_WIDTH/2)-((TABLE_WIDTH/2.5)/2)), circleYcord1 , TABLE_WIDTH/2.5, TABLE_HEIGHT/3);
-        g2d.fill(ccLayer2);
+        
+        g2d.setPaint(new Color(30,110,30));
+        outerCircleBackground = new Area(new Ellipse2D.Double(OUTERCIRCLEXCORD, OUTERCIRCLEYCORD, OUTERCIRCLEXDIM, OUTERCIRCLEYDIM));
+        g2d.fill(outerCircleBackground);
+        
+        Area insideTableRim = new Area(new Ellipse2D.Double(OUTERCIRCLEXCORD, OUTERCIRCLEYCORD, OUTERCIRCLEXDIM, OUTERCIRCLEYDIM));
+        Area everythingOutsideTableRim = new Area(new Rectangle2D.Double(0, 0, TABLE_WIDTH, TABLE_HEIGHT));
+        everythingOutsideTableRim.subtract(insideTableRim);
+        
+
+        
+        g2d.setPaint(new Color(59,154,59));
+        tableRim = new Area(new Ellipse2D.Double(0, 0, OUTERCIRCLEXDIM+85, OUTERCIRCLEYDIM+85));
+        tableRim.subtract(insideTableRim);
+        g2d.fill(tableRim);
+        
+        AffineTransform old = g2d.getTransform();
+        g2d.shear(0,.1);
+        g2d.setPaint(new Color(50,150,50));
+        rightSideCircleShade = new Area(new Ellipse2D.Double((TABLE_WIDTH/3.8), TABLE_HEIGHT/2 , TABLE_WIDTH/2.5, TABLE_HEIGHT/6));
+        g2d.fill(rightSideCircleShade);
+        g2d.setTransform(old);
+        innerLeftSideSquareFiller = new Area(new Rectangle2D.Double((TABLE_WIDTH/2-TABLE_WIDTH/5), TABLE_HEIGHT/2.5+4, TABLE_WIDTH/5, 300));
+        g2d.setPaint(new Color(50,150,50));
+        g2d.fill(innerLeftSideSquareFiller);
+
 //        g2d.setPaint(new Color(30,110,30));
 //        centerMovingTop = new Ellipse2D.Double(((TABLE_WIDTH/2)-((TABLE_WIDTH/2.5)/2)), (TABLE_HEIGHT/4), TABLE_WIDTH/2.5, TABLE_HEIGHT/3);
 //        g2d.fill(centerMovingTop);
-//        rectAnimator = new Layer1Movement();
-        g2d.translate(0,circleValAdd);
+//        outerCircleAnimator = new Layer1Movement();
+        
+        innerStationaryCircleTopHole = new Area(new Ellipse2D.Double(((TABLE_WIDTH/2)-((TABLE_WIDTH/2.5)/2)) , circleYcord1+outerCircleYmovement , TABLE_WIDTH/2.5, TABLE_HEIGHT/3));
+        innerRightSideSquare = new Area(new Rectangle2D.Double((TABLE_WIDTH/2), TABLE_HEIGHT/2.5+4, TABLE_WIDTH/5, xStretch));
+//        g2d.setPaint(new Color(60,180,60));
+//        g2d.fill(innerRightSideSquare);
+        
+        innerLeftSideSquare = new Area(new Rectangle2D.Double((TABLE_WIDTH/2-TABLE_WIDTH/5), TABLE_HEIGHT/2.5+4, TABLE_WIDTH/5, xStretch));
+        g2d.setPaint(new Color(50,150,50));
+        g2d.fill(innerLeftSideSquare);
+        
+        g2d.setPaint(new Color(39,134,39));
+        outerCircleTable = new Area (new Ellipse2D.Double(OUTERCIRCLEXCORD, (OUTERCIRCLEYCORD + outerCircleYmovement), OUTERCIRCLEXDIM, OUTERCIRCLEYDIM));
+        outerCircleTable.subtract(everythingOutsideTableRim);
+        outerCircleTable.subtract(innerStationaryCircleTopHole);
+        outerCircleTable.subtract(innerRightSideSquare);
+        outerCircleTable.subtract(innerLeftSideSquare);
+        g2d.fill(outerCircleTable);
+        
+        g2d.setPaint(new Color(39,134,39));
+        innerStationaryCircleTop = new Area(new Ellipse2D.Double(((TABLE_WIDTH/2)-((TABLE_WIDTH/2.5)/2)), circleYcord1 , TABLE_WIDTH/2.5, TABLE_HEIGHT/3));
+        g2d.fill(innerStationaryCircleTop);
+        
+        g2d.setPaint(new Color(20,80,20));
+        innerStationaryCircleShadeHole = new Area(new Ellipse2D.Double(((TABLE_WIDTH/2)-((TABLE_WIDTH/2.5)/2))+3, circleYcord1+1 , (TABLE_WIDTH/2.5)-6, (TABLE_HEIGHT/3)-6));
+        innerStationaryCircleShade = new Area(new Ellipse2D.Double(((TABLE_WIDTH/2)-((TABLE_WIDTH/2.5)/2)), circleYcord1 , TABLE_WIDTH/2.5, TABLE_HEIGHT/3));
+        innerStationaryCircleShade.subtract(innerStationaryCircleShadeHole);
+        g2d.fill(innerStationaryCircleShade);
+
 
 
         g2d.dispose();
@@ -116,20 +187,21 @@ class Surface extends JPanel implements ActionListener{
         }
         @Override
         public void run() {
-            while (count < 60) {
+            while (count < 300) {
                 repaint();
                 count++;
-                if (count <= 10){
-                	circleYcord1 += 5;
+                if (count <= 100){
+                	outerCircleYmovement += 1;
+                	xStretch += 1;
                 }
-                else if (count > 20){
+                else if (count > 100 && count <= 200){
                 }
-                else{
-                	circleYcord1 -= 5;
+                else if (count > 200 && count <= 300){
+                	outerCircleYmovement -= 1;
+                	xStretch -= 1;
                 }
-
                 try {
-                    Thread.sleep(50);
+                    Thread.sleep(10);
                 } catch (InterruptedException ex) {
                      Logger.getLogger(Surface.class.getName()).log(Level.SEVERE, 
                              null, ex);
@@ -137,38 +209,38 @@ class Surface extends JPanel implements ActionListener{
             }
         }
     }
-    class Layer2Movement implements Runnable {
-        private Thread runner;
-        private int count = 0;
-        public Layer2Movement() {
-        	initThread();
-        }
-        private void initThread() {
-            runner = new Thread(this);
-            runner.start();
-        }
-        @Override
-        public void run() {
-            while (count < 60) {
-                repaint();
-                count++;
-                if (count <= 10){
-                	circleYcord2 += 5;
-                }
-                else if (count > 20){
-                }
-                else{
-                	circleYcord2 -= 5;
-                }
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException ex) {
-                     Logger.getLogger(Surface.class.getName()).log(Level.SEVERE, 
-                             null, ex);
-                }
-            }
-        }
-    }
+//    class Layer2Movement implements Runnable {
+//        private Thread runner;
+//        private int count = 0;
+//        public Layer2Movement() {
+//        	initThread();
+//        }
+//        private void initThread() {
+//            runner = new Thread(this);
+//            runner.start();
+//        }
+//        @Override
+//        public void run() {
+//            while (count < 60) {
+//                repaint();
+//                count++;
+//                if (count <= 10){
+//                	circleYcord2 += 1;
+//                }
+//                else if (count > 20){
+//                }
+//                else{
+//                	circleYcord2 -= 1;
+//                }
+//                try {
+//                    Thread.sleep(50);
+//                } catch (InterruptedException ex) {
+//                     Logger.getLogger(Surface.class.getName()).log(Level.SEVERE, 
+//                             null, ex);
+//                }
+//            }
+//        }
+//    }
 }
 
 	
@@ -176,6 +248,8 @@ class Surface extends JPanel implements ActionListener{
 public class CircleBoard extends JFrame {
 	final static int TABLE_WIDTH = 1015;
 	final static int TABLE_HEIGHT = 835;
+	
+
 	
 	Surface surface;
 	

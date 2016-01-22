@@ -78,8 +78,7 @@ class Surface extends JPanel {
             }
         }
     }
-    class HitTestAdapter extends MouseAdapter
-            implements Runnable {
+    class HitTestAdapter extends MouseAdapter implements Runnable {
         private RectRunnable rectAnimator;
         private Thread ellipseAnimator;
         @Override
